@@ -20,7 +20,9 @@ class JiraTask:
             project=raw_task_data['fields']['project']['name'],
             status=raw_task_data['fields']['status']['name'],
             priority=raw_task_data['fields']['priority']['name'],
-            estimate=raw_task_data['fields']['timetracking']['originalEstimate'],
+            estimate=raw_task_data['fields'].get(
+                'timetracking').get('originalEstimate') if raw_task_data['fields'].get(
+                'timetracking') else None,
             link=self.JIRA_BASE_TASK_URL + raw_task_data['key'],
             assignee=raw_task_data['fields']['assignee']['emailAddress']
         )

@@ -21,8 +21,16 @@ class MarvinProject:
     def from_jira_task(self, jiraTask: JiraTask):
         return MarvinProject(
             title=jiraTask.key+' '+jiraTask.title,
-            note=jiraTask.link[0],  # откуда берется тапл?
+            note=jiraTask.link[0],  # why do we have tuple here?
             estimate=None
+        )
+
+    @classmethod
+    def from_object(self, obj: object):
+        return MarvinProject(
+            title=obj['title'],
+            parentId=obj['parentId'],
+            tags=obj.get('labelIds')
         )
 
     def to_json(self) -> str:
@@ -35,7 +43,7 @@ class MarvinProject:
             'title': self.title + tag_appendix + estimate_appendix,
             'parentId': self.parentId,
             'note': self.note,
-            # 'labelIds': self.tagIds,
+            # 'labelIds': self.tagIds, # does not seem to work in API
             'day': self.day,
             # 'timeEstimate': self.timeEstimate,
             'timeZoneOffset': self.timeZoneOffset
