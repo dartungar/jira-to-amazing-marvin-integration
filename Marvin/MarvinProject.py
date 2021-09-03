@@ -1,11 +1,13 @@
-from JiraTask import JiraTask
+# TODO: MarvinProject не должен зависеть от JiraTask
+from Jira.JiraIssue import JiraIssue
 from JiraToMarvinConverter import JiraToMarvinConverter
 import json
 
 
 class MarvinProject:
     converter = JiraToMarvinConverter()
-    TIMEZONE_OFFSET = 180  # разница в часовых поясах с GMT+00, в минутах
+    # difference between GMT+0 and your timezone
+    TIMEZONE_OFFSET_MINUTES = 180  # GMT+3
     DEFAULT_TAGS = ["upcoming"]
 
     def __init__(self, title: str, parentId: int = None, note: str = None, day: str = None, estimate: int = None, tags: list = None) -> None:
@@ -14,15 +16,15 @@ class MarvinProject:
         self.note = note
         self.day = day
         self.timeEstimate = estimate
-        self.timeZoneOffset = self.TIMEZONE_OFFSET
+        self.timeZoneOffset = self.TIMEZONE_OFFSET_MINUTES
         self.tags = tags if tags else self.DEFAULT_TAGS
 
     @classmethod
-    def from_jira_task(self, jiraTask: JiraTask):
+    def from_jira_issue(self, jira_issue: JiraIssue):
         return MarvinProject(
-            title=jiraTask.key+' '+jiraTask.title,
-            note=jiraTask.link[0],  # why do we have tuple here?
-            estimate=None
+            title=jira_issue.key+' '+jira_issue.title,
+            note=jira_issue.link[0],  # why do we have tuple here?
+            estimate=jira_issue.estimate or None
         )
 
     @classmethod
@@ -35,17 +37,15 @@ class MarvinProject:
 
     def to_json(self) -> str:
         # add tags in title because labelIds param does not seem to work in API
-        tag_appendix = f' @{" @".join(self.tags)}'
-        # add estimate in title because format for adding in title matches jira's
-        estimate_appendix = f' ~{self.timeEstimate}'
+        # also, tag names are much more convenient for simple usage
+        tag_appendix = f' @{" @".join(self.tags)}' if self.tags else ''
 
         project_data = {
-            'title': self.title + tag_appendix + estimate_appendix,
+            'title': self.title + tag_appendix,
             'parentId': self.parentId,
             'note': self.note,
-            # 'labelIds': self.tagIds, # does not seem to work in API
             'day': self.day,
-            # 'timeEstimate': self.timeEstimate,
+            'timeEstimate': self.timeEstimate,
             'timeZoneOffset': self.timeZoneOffset
         }
         return json.dumps(project_data, ensure_ascii=False)

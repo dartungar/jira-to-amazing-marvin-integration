@@ -5,9 +5,6 @@ class JiraToMarvinConverter:
     def convertJiraStatus(self, jiraStatus):
         pass
 
-    def convertJiraProjectNameToMarvinProjectId(self, jiraProject) -> int:
-        pass
-
     def convertJiraPriority(self, jiraPriority) -> str:
         pass
 

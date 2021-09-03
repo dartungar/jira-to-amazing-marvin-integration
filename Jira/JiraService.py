@@ -1,3 +1,6 @@
+from typing import List
+from Jira.JiraIssue import JiraIssue
+from Jira.JiraIssueRepository import JiraIssueRepository
 import os
 import requests
 import base64
@@ -11,6 +14,7 @@ class JiraService:
     API_URL_GET_TASK: str = os.getenv('JIRA_API_URL_GET_TASK')
     API_URL_GET_TASKS: str = os.getenv('JIRA_API_URL_GET_TASKS')
     API_KEY: str = os.getenv('JIRA_API_KEY')
+    JIRA_BASE_ISSUE_URL = os.getenv('JIRA_BASE_ISSUE_URL')
     credentials_unencoded = ':'.join(
         [os.getenv('JIRA_EMAIL'), API_KEY])
     CREDENTIALS: str = base64.b64encode(
@@ -19,20 +23,30 @@ class JiraService:
         "Authorization": b"Basic " + CREDENTIALS}
     DEFAULT_ASSIGNEE = 'currentUser()'
 
-    def get_raw_task_data(self, key: str) -> object:
-        response = requests.get(self.BASE_API_URL + key,
+    def populate_issues_repository_from_API(self, repository: JiraIssueRepository, jira_issues_keys: List[str] = None) -> JiraIssueRepository:
+        try:
+            if jira_issues_keys:
+                raw_issues_data = [
+                    self.get_raw_issue_data_by_key(key) for key in jira_issues_keys]
+            else:
+                raw_issues_data = self.get_raw_all_issues_data()
+            repository.populate_from_raw_data(
+                raw_issues_data, self.JIRA_BASE_ISSUE_URL)
+            return repository
+        except Exception as e:
+            raise JiraServiceError(
+                f'Error populating Jira issues repository from API: {e}')
+
+    def get_raw_issue_data_by_key(self, key: str) -> object:
+        response = requests.get(self.API_URL_GET_TASK + key,
                                 headers=self.URL_HEADERS)
         if not response.ok:
             raise JiraServiceError(
                 f"Error getting task data from Jira: {response.code}")
-        return json.loads(response.json())
-
-    def get_task_keys_from_string(self, string: str) -> set:
-        key_regex = re.compile(r'[A-Z]{2,6}-[1-9][0-9]{0,4}')
-        return set(key_regex.findall(string))
+        return response.json()
 
     # TODO: projects, status
-    def get_raw_tasks_data(self, assignee=DEFAULT_ASSIGNEE, status=None, projects=None) -> object:
+    def get_raw_all_issues_data(self, assignee=DEFAULT_ASSIGNEE, status=None, projects=None) -> object:
         jql = ""
         if assignee or status:
             jql = f'assignee = {assignee}'
@@ -45,7 +59,11 @@ class JiraService:
         if not response.ok:
             raise JiraServiceError(
                 f"Error getting all tasks data from Jira: {response.json()}")
-        return response.json()
+        return response.json()['issues']
+
+    def get_issues_keys_from_string(self, string: str) -> set:
+        key_regex = re.compile(r'[A-Z]{2,6}-[1-9][0-9]{0,4}')
+        return set(key_regex.findall(string))
 
 
 class JiraServiceError(ValueError):

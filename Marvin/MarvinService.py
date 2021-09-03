@@ -1,5 +1,5 @@
-from MarvinProjectRepository import MarvinProjectsRepository
-from MarvinProject import MarvinProject
+from Marvin.MarvinProjectRepository import MarvinProjectsRepository
+from Marvin.MarvinProject import MarvinProject
 import os
 import requests
 
@@ -35,13 +35,15 @@ class MarvinService:
 
         return response.json()
 
-    def populate_repository_from_API(self) -> None:
-        data = self.get_projects_data_from_API()
+    def populate_repository_from_API(self, repository: MarvinProjectsRepository) -> MarvinProjectsRepository:
+
         try:
-            self.projects_repository.populate_from_raw_data(data)
+            data = self.get_projects_data_from_API()
+            repository.populate_from_raw_data(data)
+            return repository
         except Exception as e:  # TODO: catch specific error
             raise MarvinServiceError(
-                f'Error populating Marvin projects repository: {e}')
+                f'Error populating Marvin projects repository from API: {e}')
 
 
 class MarvinServiceError(ValueError):
