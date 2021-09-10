@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class JiraIssue:
 
     def __init__(self, key: str, title: str, status: str, assignee: str, estimate: int, priority: str, project: str, link: str) -> None:
@@ -5,13 +8,13 @@ class JiraIssue:
         self.title: str = title
         self.status: str = status
         self.assignee: str = assignee
-        self.estimate: str = estimate * 1000 if estimate else None
+        self.estimate: Optional[int] = estimate * 1000 if estimate else None
         self.link: str = link,
         self.priority: str = priority,
         self.project: str = project
 
     @classmethod
-    def from_raw_jira_issue_data(self, raw_issue_data: str, base_issue_url: str):
+    def from_raw_jira_issue_data(self, raw_issue_data: dict, base_issue_url: str):
         return JiraIssue(
             key=raw_issue_data['key'],
             title=raw_issue_data['fields']['summary'],
