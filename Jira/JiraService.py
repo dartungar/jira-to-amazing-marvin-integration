@@ -12,13 +12,13 @@ class JiraService:
     settings: Settings
     API_KEY: str
     URL_HEADERS: dict
-    DEFAULT_ASSIGNEE = 'currentUser()'
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.setup()
 
     def setup(self) -> None:
+        '''set up class variables'''
         try:
             self.API_KEY = os.getenv('JIRA_API_KEY', '')
             if (self.settings.JIRA_USER_LOGIN and self.API_KEY):
@@ -35,6 +35,7 @@ class JiraService:
             raise JiraServiceError(f"Error during Jira service setup: {e}")
 
     def populate_issues_repository_from_API(self, repository: JiraIssueRepository, jira_issues_keys: List[str] = None) -> JiraIssueRepository:
+        '''get raw issues data & populate issues repository with issues created from raw data'''
         raw_issues_data: List[dict]
         try:
             if jira_issues_keys:
@@ -50,6 +51,7 @@ class JiraService:
                 f'Error populating Jira issues repository from API: {e}')
 
     def get_raw_issue_data_by_key(self, key: str) -> dict:
+        '''get single issue data by its key'''
         response = requests.get(str(self.settings.JIRA_GET_TASK_URL) + key,
                                 headers=self.URL_HEADERS)
         if not response.ok:
@@ -58,15 +60,14 @@ class JiraService:
         return response.json()
 
     # TODO: projects, status
-    def get_raw_all_issues_data(self,
-                                assignee=DEFAULT_ASSIGNEE,
-                                status=None) -> List[dict]:
-
+    def get_raw_all_issues_data(self) -> List[dict]:
+        '''get all available issues from Jira, with filters specified in settings.json'''
         jql = ""
-        if assignee:
-            jql = f'assignee = {assignee}'
-        if status:
-            pass  # TODO
+        if self.settings.JIRA_USER_LOGIN:
+            # can't pass "@" into jira unescaped
+            user_login_escaped = self.settings.JIRA_USER_LOGIN.replace(
+                "@", "\\u0040")
+            jql = f'assignee = {user_login_escaped}'
         if self.settings.JIRA_PROJECTS:
             projects_string = ",".join(
                 [f'"{p}"' for p in self.settings.JIRA_PROJECTS])
@@ -88,6 +89,7 @@ class JiraService:
         return response.json()['issues']
 
     def get_issues_keys_from_string(self, string: str) -> Set[str]:
+        '''extract issue keys from string'''
         key_regex = re.compile(r'[A-Z]{2,6}-[1-9][0-9]{0,4}')
         return set(key_regex.findall(string))
 
