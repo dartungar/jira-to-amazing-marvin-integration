@@ -1,3 +1,4 @@
+from Settings import Settings
 from typing import List
 from Marvin.MarvinService import MarvinService
 import pytest
@@ -5,7 +6,7 @@ import pytest
 
 @pytest.fixture(scope="module")
 def marvin_service():
-    return MarvinService()
+    return MarvinService(settings=Settings())
 
 
 @pytest.fixture(scope="module")
@@ -14,9 +15,6 @@ def raw_projects_data(marvin_service: MarvinService):
 
 
 def test_setup(marvin_service: MarvinService):
-    assert marvin_service.MARVIN_ADD_PROJECT_URL
-    assert marvin_service.MARVIN_GET_PROJECTS_URL
-    assert marvin_service.MARVIN_PING_URL
     assert marvin_service.URL_HEADERS
 
 

@@ -1,3 +1,4 @@
+from Settings import Settings
 from typing import List
 from Jira.JiraIssueRepository import JiraIssueRepository
 from Jira.JiraService import JiraService
@@ -9,9 +10,10 @@ from Marvin.MarvinProject import MarvinProject
 class Application:
 
     def __init__(self) -> None:
-        self.jira = JiraService()
+        self.settings = Settings()
+        self.jira = JiraService(self.settings)
         self.issues_repository = JiraIssueRepository()
-        self.marvin = MarvinService()
+        self.marvin = MarvinService(self.settings)
         self.existing_projects_repository = MarvinProjectsRepository()
         self.new_projects_repository = MarvinProjectsRepository()
 

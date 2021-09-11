@@ -1,3 +1,4 @@
+from Settings import Settings
 import os
 from Jira.JiraIssue import JiraIssue
 from Jira.JiraService import JiraService
@@ -6,9 +7,7 @@ import pytest
 
 @pytest.fixture(scope='module')
 def jira_service():
-    jira = JiraService()
-    print(os.getenv('JIRA_EMAIL'))
-
+    jira = JiraService(settings=Settings())
     return jira
 
 
@@ -18,10 +17,8 @@ def test_issue_data(jira_service: JiraService) -> dict:
 
 
 def test_setup(jira_service: JiraService):
-    assert isinstance(jira_service.API_URL_GET_TASK, str)
-    assert isinstance(jira_service.API_URL_GET_TASK, str)
-    assert isinstance(jira_service.API_KEY, str)
-    assert isinstance(jira_service.URL_HEADERS, dict)
+    assert jira_service.API_KEY
+    assert jira_service.URL_HEADERS
 
 
 def test_get_single_issue_data(jira_service: JiraService):
@@ -43,7 +40,7 @@ def test_issue_data_shape(test_issue_data: dict):
 
 def test_from_raw_data(test_issue_data: dict, jira_service: JiraService):
     issue = JiraIssue.from_raw_jira_issue_data(
-        test_issue_data, jira_service.JIRA_BASE_ISSUE_URL)
+        test_issue_data, jira_service.settings.JIRA_BROWSING_BASE_URL)
     assert issue.key
     assert issue.title
     assert issue.status
@@ -51,3 +48,13 @@ def test_from_raw_data(test_issue_data: dict, jira_service: JiraService):
     assert issue.link
     assert issue.priority
     assert issue.project
+
+
+def test_projects():
+    # TODO
+    pass
+
+
+def test_excluded_projects():
+    # TODO
+    pass
