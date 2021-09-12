@@ -13,6 +13,18 @@ class JiraService:
     API_KEY: str
     URL_HEADERS: dict
 
+    @staticmethod
+    def get_issues_keys_from_string(string: str) -> Set[str]:
+        '''get a set of issue keys by parsing string'''
+        key_regex = re.compile(r'[A-Z]{2,6}-[1-9][0-9]{0,4}')
+        return set(key_regex.findall(string))
+
+    @staticmethod
+    def get_single_issue_key_from_string(string: str) -> str:
+        key_regex = re.compile(r'[A-Z]{2,6}-[1-9][0-9]{0,4}')
+        keys_found = key_regex.findall(string)
+        return keys_found[0] if keys_found else None
+
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.setup()
@@ -62,6 +74,18 @@ class JiraService:
     # TODO: projects, status
     def get_raw_all_issues_data(self) -> List[dict]:
         '''get all available issues from Jira, with filters specified in settings.json'''
+        jql = self.construct_jql_query()
+        response = requests.get(str(self.settings.JIRA_SEARCH_URL),
+                                params={
+                                    "jql": jql if jql else None},
+                                headers=self.URL_HEADERS)
+        if not response.ok:
+            raise JiraServiceError(
+                f"Error getting all tasks data from Jira: {response.json()}")
+        return response.json()['issues']
+
+    def construct_jql_query(self) -> str:
+        '''construct JQL query using constraints from settings'''
         jql = ""
         if self.settings.JIRA_USER_LOGIN:
             # can't pass "@" into jira unescaped
@@ -78,20 +102,7 @@ class JiraService:
             jql += f' AND project NOT IN ({excluded_projects_string})'
         # tasks must be not done
         jql += ' AND statusCategory != Done'
-
-        response = requests.get(str(self.settings.JIRA_SEARCH_URL),
-                                params={
-                                    "jql": jql if jql else None},
-                                headers=self.URL_HEADERS)
-        if not response.ok:
-            raise JiraServiceError(
-                f"Error getting all tasks data from Jira: {response.json()}")
-        return response.json()['issues']
-
-    def get_issues_keys_from_string(self, string: str) -> Set[str]:
-        '''extract issue keys from string'''
-        key_regex = re.compile(r'[A-Z]{2,6}-[1-9][0-9]{0,4}')
-        return set(key_regex.findall(string))
+        return jql
 
 
 class JiraServiceError(ValueError):

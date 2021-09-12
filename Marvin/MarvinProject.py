@@ -1,34 +1,48 @@
 # TODO: MarvinProject не должен зависеть от JiraTask
+from Jira.JiraService import JiraService
+from Settings import Settings
 from Jira.JiraIssue import JiraIssue
-from JiraToMarvinConverter import JiraToMarvinConverter
 import json
 
 
-class MarvinProject:
-    converter = JiraToMarvinConverter()
-    # difference between GMT+0 and your timezone
-    TIMEZONE_OFFSET_MINUTES = 180  # GMT+3
-    DEFAULT_TAGS = ["upcoming"]
+class MarvinProjectStatuses:
+    '''possible statuses of Jira-Marvin synchronization '''
+    synced = 0
+    exists_only_in_marvin = 1
+    exists_only_in_jira = 2
+    not_defined = 3
 
-    def __init__(self, title: str, parentId: int = None, note: str = None, day: str = None, estimate: int = None, tags: list = None) -> None:
+
+class MarvinProject:
+    '''a representation of Marvin project'''
+    from JiraToMarvinConverter import JiraToMarvinConverter
+    settings: Settings = Settings()
+    converter = JiraToMarvinConverter()
+
+    def __init__(self,
+                 title: str,
+                 sync_status=MarvinProjectStatuses.not_defined,
+                 parentId: int = None,
+                 note: str = None,
+                 day: str = None,
+                 estimate: int = None,
+                 tags: list = None) -> None:
+
         self.title = title
+        self.jira_key = JiraService.get_single_issue_key_from_string(title)
         self.parentId = parentId
         self.note = note
         self.day = day
         self.timeEstimate = estimate
-        self.timeZoneOffset = self.TIMEZONE_OFFSET_MINUTES
-        self.tags = tags if tags else self.DEFAULT_TAGS
+        self.tags = tags if tags else self.settings.MARVIN_DEFAULT_TAGS
+        self.sync_status = sync_status
 
     @classmethod
     def from_jira_issue(self, jira_issue: JiraIssue):
-        return MarvinProject(
-            title=jira_issue.key+' '+jira_issue.title,
-            note=jira_issue.link[0],  # why do we have tuple here?
-            estimate=jira_issue.estimate or None
-        )
+        return self.converter.marvin_project_from_jira_issue(jira_issue)
 
     @classmethod
-    def from_object(self, obj: object):
+    def from_object(self, obj: dict):
         return MarvinProject(
             title=obj['title'],
             parentId=obj['parentId'],
@@ -46,6 +60,6 @@ class MarvinProject:
             'note': self.note,
             'day': self.day,
             'timeEstimate': self.timeEstimate,
-            'timeZoneOffset': self.timeZoneOffset
+            'timeZoneOffset': self.settings.MARVIN_TIMEZONE_OFFSET_MINUTES
         }
         return json.dumps(project_data, ensure_ascii=False)
