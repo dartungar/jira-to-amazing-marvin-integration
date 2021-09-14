@@ -9,6 +9,10 @@ class MarvinProjectsRepository:
         self.data: List[MarvinProject] = []
 
     @property
+    def project_jira_keys(self) -> List[str]:
+        return [p.jira_key for p in self.data if p.jira_key]
+
+    @property
     def not_synced_projects(self) -> List[MarvinProject]:
         return [p for p in self.data if p.sync_status == MarvinProjectStatuses.exists_only_in_jira]
 
@@ -60,5 +64,6 @@ class MarvinProjectsRepository:
 
     def add_multiple_from_jira_issues(self, issues: List[JiraIssue]) -> None:
         for issue in issues:
-            project = MarvinProject.from_jira_issue(issue)
-            self.add(project)
+            if issue.key not in self.project_jira_keys:
+                project = MarvinProject.from_jira_issue(issue)
+                self.add(project)

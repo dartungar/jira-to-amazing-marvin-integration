@@ -7,6 +7,10 @@ class JiraIssueRepository:
     def __init__(self) -> None:
         self.data: List[JiraIssue] = []
 
+    @property
+    def issues_keys(self):
+        return [issue.key for issue in self.data]
+
     def add(self, issue: JiraIssue) -> None:
         self.data.append(issue)
 

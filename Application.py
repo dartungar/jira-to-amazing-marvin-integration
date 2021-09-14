@@ -20,6 +20,10 @@ class Application:
         self.projects_repository = MarvinProjectsRepository()
 
     def sync(self) -> None:
+        '''get a list of issues from Jira, get a list of projects from Marvin,
+        determine whether Jira issues need to be created as Marvin projects,
+        and create Marvin projects if needed
+        '''
         self.populate_issues_repository_from_jira()
         if not self.issues_repository.data:
             logging.info("found no issues in Jira.")
@@ -67,14 +71,19 @@ class Application:
     def actualize_marvin_project_statuses(self) -> None:
         '''set Marvin project synchronization status based on whether there is already a Jira issue with such a key'''
         logging.info("actualizing Marvin projects statuses...")
+        print(f"issues keys: {self.issues_repository.issues_keys}")
+        # TODO: переделать алгоритм расчета статуса, т.к сейчас
+        # по всем задачам Jira создается проект Марвина
+        # и он считается "синхронизированным" т.к есть в обоих списках
         for project in self.projects_repository.data:
-            if project.sync_status == MarvinProjectStatuses.exists_only_in_marvin:
-                continue  # no Marvin -> Jira sync for now
-            if any([project.jira_key == issue.key for issue in self.issues_repository.data]):
-                project.sync_status = MarvinProjectStatuses.synced
-                continue
+            print(f"project key: {project.jira_key} {project.sync_status}")
+            if project.jira_key in self.issues_repository.issues_keys:
+                if project.sync_status == MarvinProjectStatuses.exists_only_in_marvin or project.sync_status == MarvinProjectStatuses.not_defined:
+                    project.sync_status = MarvinProjectStatuses.synced
+                if project.sync_status == MarvinProjectStatuses.exists_only_in_jira:
+                    continue
             else:
-                project.sync_status = MarvinProjectStatuses.exists_only_in_jira
+                project.sync_status = MarvinProjectStatuses.exists_only_in_marvin
 
     def create_multiple_projects_in_marvin(self, projects: List[MarvinProject]) -> None:
         logging.info("creating projects in Marvin...")
