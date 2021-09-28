@@ -29,10 +29,10 @@ class MarvinProjectsRepository:
         self.clear()
         self.add_multiple_from_raw_data(raw_data)
 
-    def populate_from_list_of_issues(self, issues: List[JiraIssue]) -> None:
+    def populate_from_list_of_issues(self, issues: List[JiraIssue], sync_status: int) -> None:
         '''populate from an array of JiraIssue objects'''
         self.clear()
-        self.add_multiple_from_jira_issues(issues)
+        self.add_multiple_from_jira_issues(issues, sync_status)
 
     def exists_with_key(self, key: str) -> bool:
         '''check if project with such issue key already exists'''
@@ -62,8 +62,9 @@ class MarvinProjectsRepository:
             project = MarvinProject.from_object(entry)
             self.add(project)
 
-    def add_multiple_from_jira_issues(self, issues: List[JiraIssue]) -> None:
+    def add_multiple_from_jira_issues(self, issues: List[JiraIssue], sync_status: int) -> None:
         for issue in issues:
             if issue.key not in self.project_jira_keys:
                 project = MarvinProject.from_jira_issue(issue)
+                project.sync_status = sync_status
                 self.add(project)

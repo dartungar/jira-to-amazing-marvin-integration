@@ -35,9 +35,7 @@ class Application:
             return
         # add new projects from Jira issues
         self.projects_repository.add_multiple_from_jira_issues(
-            self.issues_repository.data)
-        self.projects_repository.set_sync_status_to_all_projects_if_not_defined(
-            MarvinProjectStatuses.exists_only_in_jira)
+            self.issues_repository.data, MarvinProjectStatuses.exists_only_in_jira)
         self.actualize_marvin_project_statuses()
         if self.projects_repository.not_synced_projects:
             self.create_multiple_projects_in_marvin(
@@ -52,7 +50,7 @@ class Application:
             logging.info("found no issues in Jira.")
             return
         projects: MarvinProjectsRepository = MarvinProjectsRepository.populate_from_list_of_issues(
-            self.issues_repository.data)
+            self.issues_repository.data, MarvinProjectStatuses.exists_only_in_jira)
         if projects.data:
             self.create_multiple_projects_in_marvin(projects)
         else:
@@ -71,12 +69,7 @@ class Application:
     def actualize_marvin_project_statuses(self) -> None:
         '''set Marvin project synchronization status based on whether there is already a Jira issue with such a key'''
         logging.info("actualizing Marvin projects statuses...")
-        print(f"issues keys: {self.issues_repository.issues_keys}")
-        # TODO: переделать алгоритм расчета статуса, т.к сейчас
-        # по всем задачам Jira создается проект Марвина
-        # и он считается "синхронизированным" т.к есть в обоих списках
         for project in self.projects_repository.data:
-            print(f"project key: {project.jira_key} {project.sync_status}")
             if project.jira_key in self.issues_repository.issues_keys:
                 if project.sync_status == MarvinProjectStatuses.exists_only_in_marvin or project.sync_status == MarvinProjectStatuses.not_defined:
                     project.sync_status = MarvinProjectStatuses.synced

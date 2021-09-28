@@ -21,12 +21,11 @@ class MarvinProject:
 
     def __init__(self,
                  title: str,
-                 sync_status=MarvinProjectStatuses.not_defined,
                  parentId: int = None,
                  note: str = None,
                  day: str = None,
                  estimate: int = None,
-                 tags: list = None) -> None:
+                 tags: list = settings.MARVIN_DEFAULT_TAGS) -> None:
 
         self.title = title
         self.jira_key = JiraService.get_single_issue_key_from_string(title)
@@ -34,8 +33,8 @@ class MarvinProject:
         self.note = note
         self.day = day
         self.timeEstimate = estimate
-        self.tags = tags if tags else self.settings.MARVIN_DEFAULT_TAGS
-        self.sync_status = sync_status
+        self.tags = tags
+        self.sync_status = MarvinProjectStatuses.not_defined
 
     @classmethod
     def from_jira_issue(self, jira_issue: JiraIssue):
@@ -46,7 +45,7 @@ class MarvinProject:
         return MarvinProject(
             title=obj['title'],
             parentId=obj['parentId'],
-            tags=obj.get('labelIds')
+            tags=obj.get('labelIds') or []
         )
 
     def to_json(self) -> str:
