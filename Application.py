@@ -4,7 +4,7 @@ from Jira.JiraIssueRepository import JiraIssueRepository
 from Jira.JiraService import JiraService
 from Marvin.MarvinService import MarvinService
 from Marvin.MarvinProjectRepository import MarvinProjectsRepository
-from Marvin.MarvinProject import MarvinProject
+from Marvin.MarvinProject import MarvinProject, MarvinProjectStatuses
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -17,38 +17,40 @@ class Application:
         self.jira = JiraService(self.settings)
         self.issues_repository = JiraIssueRepository()
         self.marvin = MarvinService(self.settings)
-        self.existing_projects_repository = MarvinProjectsRepository()
-        # TODO: make into repository or refactor into single repo with statuses
-        self.new_projects: List[MarvinProject] = []
+        self.projects_repository = MarvinProjectsRepository()
 
     def sync(self) -> None:
+        '''get a list of issues from Jira, get a list of projects from Marvin,
+        determine whether Jira issues need to be created as Marvin projects,
+        and create Marvin projects if needed
+        '''
         self.populate_issues_repository_from_jira()
         if not self.issues_repository.data:
             logging.info("found no issues in Jira.")
             return
-        self.populate_existing_projects_repository()
-        if not self.existing_projects_repository.data:
+        self.populate_projects_repository()
+        if not self.projects_repository.data:
             logging.warning(
-                "found no projects in Marvin. this might be not OK!")
+                "found no projects in Marvin. this might be not OK, check if Marvin API calls work!")
             return
-        logging.info(
-            "checking if there are Jira issues without corresponding Marvin project...")
-        # TODO: отрефакторить в отдельную функцию
-        self.new_projects = [MarvinProject.from_jira_issue(
-            issue) for issue in self.issues_repository.data if not self.existing_projects_repository.exists_with_key(issue.key)]
-        if self.new_projects:
-            self.create_multiple_projects_in_marvin(self.new_projects)
+        # add new projects from Jira issues
+        self.projects_repository.add_multiple_from_jira_issues(
+            self.issues_repository.data, MarvinProjectStatuses.exists_only_in_jira)
+        self.actualize_marvin_project_statuses()
+        if self.projects_repository.not_synced_projects:
+            self.create_multiple_projects_in_marvin(
+                self.projects_repository.not_synced_projects)
         else:
             logging.info("all Marvin projects are up to date.")
 
     def get_jira_issues_by_string_and_add_projects_to_marvin(self, string) -> None:
-        issues_keys = self.jira.get_issues_keys_from_string(string)
+        issues_keys = JiraService.get_issues_keys_from_string(string)
         self.populate_issues_repository_from_jira(issues_keys=issues_keys)
         if not self.issues_repository.data:
             logging.info("found no issues in Jira.")
             return
         projects: MarvinProjectsRepository = MarvinProjectsRepository.populate_from_list_of_issues(
-            self.issues_repository.data)
+            self.issues_repository.data, MarvinProjectStatuses.exists_only_in_jira)
         if projects.data:
             self.create_multiple_projects_in_marvin(projects)
         else:
@@ -59,10 +61,22 @@ class Application:
         self.issues_repository = self.jira.populate_issues_repository_from_API(
             self.issues_repository, jira_issues_keys=issues_keys)
 
-    def populate_existing_projects_repository(self) -> None:
+    def populate_projects_repository(self) -> None:
         logging.info("getting projects data from Marvin...")
-        self.existing_projects_repository = self.marvin.populate_repository_from_API(
-            self.existing_projects_repository)
+        self.projects_repository = self.marvin.populate_repository_from_API(
+            self.projects_repository)
+
+    def actualize_marvin_project_statuses(self) -> None:
+        '''set Marvin project synchronization status based on whether there is already a Jira issue with such a key'''
+        logging.info("actualizing Marvin projects statuses...")
+        for project in self.projects_repository.data:
+            if project.jira_key in self.issues_repository.issues_keys:
+                if project.sync_status == MarvinProjectStatuses.exists_only_in_marvin or project.sync_status == MarvinProjectStatuses.not_defined:
+                    project.sync_status = MarvinProjectStatuses.synced
+                if project.sync_status == MarvinProjectStatuses.exists_only_in_jira:
+                    continue
+            else:
+                project.sync_status = MarvinProjectStatuses.exists_only_in_marvin
 
     def create_multiple_projects_in_marvin(self, projects: List[MarvinProject]) -> None:
         logging.info("creating projects in Marvin...")

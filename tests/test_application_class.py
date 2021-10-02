@@ -19,4 +19,4 @@ def test_application_init(application_object):
     assert isinstance(application_object.issues_repository,
                       JiraIssueRepository)
     assert isinstance(
-        application_object.existing_projects_repository, MarvinProjectsRepository)
+        application_object.projects_repository, MarvinProjectsRepository)

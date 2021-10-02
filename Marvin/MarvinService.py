@@ -1,7 +1,7 @@
 from Settings import Settings
 from typing import List
 from Marvin.MarvinProjectRepository import MarvinProjectsRepository
-from Marvin.MarvinProject import MarvinProject
+from Marvin.MarvinProject import MarvinProject, MarvinProjectStatuses
 import os
 import requests
 
@@ -44,10 +44,11 @@ class MarvinService:
         return response.json()
 
     def populate_repository_from_API(self, repository: MarvinProjectsRepository) -> MarvinProjectsRepository:
-
         try:
             data = self.get_projects_data_from_API()
             repository.populate_from_raw_data(data)
+            repository.set_sync_status_to_all_projects(
+                MarvinProjectStatuses.exists_only_in_marvin)
             return repository
         except Exception as e:  # TODO: catch specific error
             raise MarvinServiceError(
