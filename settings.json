@@ -1,0 +1,17 @@
+{
+    "Jira": {
+        "GET_TASK_URL": "https://treolan.atlassian.net/rest/api/3/issue/",
+        "SEARCH_URL": "https://treolan.atlassian.net/rest/api/3/search",
+        "BROWSING_BASE_URL": "https://treolan.atlassian.net/browse/",
+        "USER_LOGIN": "d.nikolayev@treolan.ru",
+        "PROJECTS": [],
+        "EXCLUDED_PROJECTS": ["Бизнес задачи","LE2 Staff development","ServiceDesk","Retrospective"]
+    },
+    "Marvin": {
+        "ADD_PROJECT_URL": "https://serv.amazingmarvin.com/api/addProject",
+        "GET_ALL_PROJECTS_URL": "https://serv.amazingmarvin.com/api/categories",
+        "PING_URL": "https://serv.amazingmarvin.com/api/test",
+        "TIMEZONE_OFFSET_MINUTES": 180,
+        "DEFAULT_TAGS": ["upcoming"]
+    }
+}
