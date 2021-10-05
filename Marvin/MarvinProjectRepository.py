@@ -57,6 +57,12 @@ class MarvinProjectsRepository:
     def add(self, project: MarvinProject) -> None:
         self.data.append(project)
 
+    def get_by_jira_key(self, jira_key: str) -> MarvinProject:
+        try:
+            return [p for p in self.data if p.jira_key == jira_key][0]
+        except IndexError:
+            raise IndexError
+
     def add_multiple_from_raw_data(self, raw_data: List[dict]) -> None:
         for entry in raw_data:
             project = MarvinProject.from_object(entry)

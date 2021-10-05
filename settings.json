@@ -10,6 +10,7 @@
     "Marvin": {
         "ADD_PROJECT_URL": "https://serv.amazingmarvin.com/api/addProject",
         "GET_ALL_PROJECTS_URL": "https://serv.amazingmarvin.com/api/categories",
+        "ADD_TASK_URL": "https://serv.amazingmarvin.com/api/addTask",
         "PING_URL": "https://serv.amazingmarvin.com/api/test",
         "TIMEZONE_OFFSET_MINUTES": 180,
         "DEFAULT_TAGS": ["upcoming"]

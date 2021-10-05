@@ -1,3 +1,4 @@
+from Marvin.MarvinTask import MarvinTask
 from Settings import Settings
 from typing import List
 from Marvin.MarvinProjectRepository import MarvinProjectsRepository
@@ -27,7 +28,6 @@ class MarvinService:
 
     def create_project_with_API(self, project: MarvinProject) -> None:
         data = project.to_json()
-        print(data)
         response = requests.post(
             self.settings.MARVIN_ADD_PROJECT_URL, headers=self.URL_HEADERS, data=data.encode('utf-8'))
         if not response.ok:
@@ -43,7 +43,7 @@ class MarvinService:
 
         return response.json()
 
-    def populate_repository_from_API(self, repository: MarvinProjectsRepository) -> MarvinProjectsRepository:
+    def populate_projects_repository_from_API(self, repository: MarvinProjectsRepository) -> MarvinProjectsRepository:
         try:
             data = self.get_projects_data_from_API()
             repository.populate_from_raw_data(data)
@@ -53,6 +53,13 @@ class MarvinService:
         except Exception as e:  # TODO: catch specific error
             raise MarvinServiceError(
                 f'Error populating Marvin projects repository from API: {e}')
+
+    def create_task_with_api(self, task: MarvinTask) -> None:
+        data = task.to_json()
+        response = requests.post(self.settings.MARVIN_ADD_TASK_URL, headers=self.URL_HEADERS, data=data.encode('utf-8'))
+        if not response.ok:
+            raise MarvinServiceError(f'Error adding task into Marvin: {response.status_code}')
+
 
     def ping_for_status_code(self) -> int:
         response = requests.post(self.settings.MARVIN_PING_URL,

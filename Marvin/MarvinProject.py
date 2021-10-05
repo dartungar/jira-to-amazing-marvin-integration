@@ -1,4 +1,5 @@
 # TODO: MarvinProject не должен зависеть от JiraTask
+from typing import Optional
 from Jira.JiraService import JiraService
 from Settings import Settings
 from Jira.JiraIssue import JiraIssue
@@ -16,10 +17,12 @@ class MarvinProjectStatuses:
 class MarvinProject:
     '''a representation of Marvin project'''
     from JiraToMarvinConverter import JiraToMarvinConverter
+
     settings: Settings = Settings()
     converter = JiraToMarvinConverter()
 
     def __init__(self,
+                 marvin_id: Optional[str],
                  title: str,
                  parentId: int = None,
                  note: str = None,
@@ -28,6 +31,7 @@ class MarvinProject:
                  tags: list = settings.MARVIN_DEFAULT_TAGS) -> None:
 
         self.title = title
+        self.marvin_id = marvin_id
         self.jira_key = JiraService.get_single_issue_key_from_string(title)
         self.parentId = parentId
         self.note = note
@@ -43,6 +47,7 @@ class MarvinProject:
     @classmethod
     def from_object(self, obj: dict):
         return MarvinProject(
+            marvin_id=obj['_id'],
             title=obj['title'],
             parentId=obj['parentId'],
             tags=obj.get('labelIds') or []

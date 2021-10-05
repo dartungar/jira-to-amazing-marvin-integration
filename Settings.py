@@ -13,6 +13,7 @@ class Settings:
 
     MARVIN_ADD_PROJECT_URL: str
     MARVIN_GET_ALL_PROJECTS_URL: str
+    MARVIN_ADD_TASK_URL: str
     MARVIN_PING_URL: str
     MARVIN_TIMEZONE_OFFSET_MINUTES: int
     MARVIN_DEFAULT_TAGS: List[str]
@@ -27,6 +28,7 @@ class Settings:
         self.JIRA_EXCLUDED_PROJECTS = settings['Jira']['EXCLUDED_PROJECTS']
         self.MARVIN_ADD_PROJECT_URL = settings['Marvin']['ADD_PROJECT_URL']
         self.MARVIN_GET_ALL_PROJECTS_URL = settings['Marvin']['GET_ALL_PROJECTS_URL']
+        self.MARVIN_ADD_TASK_URL = settings['Marvin']['ADD_TASK_URL']
         self.MARVIN_PING_URL = settings['Marvin']['PING_URL']
         self.MARVIN_TIMEZONE_OFFSET_MINUTES = settings['Marvin']['TIMEZONE_OFFSET_MINUTES']
         self.MARVIN_DEFAULT_TAGS = settings['Marvin']['DEFAULT_TAGS']
