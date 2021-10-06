@@ -44,22 +44,22 @@ class Application:
         else:
             logging.info("all Marvin projects are up to date.")
 
-    def get_jira_issues_for_existing_marvin_projects(self) -> None: #TODO
+    def get_jira_issues_for_existing_marvin_projects(self) -> None:  # TODO
         self.projects_repository.clear()
         self.issues_repository.clear()
         self.populate_projects_repository()
-        self.populate_issues_repository_from_jira(self.projects_repository.project_jira_keys)
+        self.populate_issues_repository_from_jira(
+            self.projects_repository.project_jira_keys)
         for issue in self.issues_repository.data:
             if issue.assignee != self.settings.JIRA_USER_LOGIN:
                 project = self.projects_repository.get_by_jira_key(issue.key)
                 task = MarvinTask(
-                    project.marvin_id, 
-                    "Проверить, действительно ли задача сменила исполнителя", 
+                    project.marvin_id,
+                    "Проверить, действительно ли задача сменила исполнителя",
                     self.settings,
-                    ["review"]) 
+                    ["review"])
                 print(task.to_json())
                 self.create_task_in_marvin(task)
-
 
     def get_jira_issues_by_string_and_add_projects_to_marvin(self, string) -> None:
         issues_keys = JiraService.get_issues_keys_from_string(string)
@@ -104,6 +104,6 @@ class Application:
 
     def create_project_in_marvin(self, project: MarvinProject) -> None:
         self.marvin.create_project_with_API(project)
-    
+
     def create_task_in_marvin(self, task: MarvinTask) -> None:
         self.marvin.create_task_with_api(task)
