@@ -4,22 +4,23 @@ from Jira.JiraService import JiraService
 from Settings import Settings
 from Jira.JiraIssue import JiraIssue
 import json
+from dataclasses import dataclass
+from typing import List
 
 
-class MarvinProjectStatuses:
-    '''possible statuses of Jira-Marvin synchronization '''
-    synced = 0
-    exists_only_in_marvin = 1
-    exists_only_in_jira = 2
-    not_defined = 3
-
-
+@dataclass
 class MarvinProject:
     '''a representation of Marvin project'''
-    from JiraToMarvinConverter import JiraToMarvinConverter
+    title: str
+    marvin_id: str
+    jira_key: str
+    parent_id: str
+    note: str
+    day: str
+    time_estimate: str
+    tags: List[str]
 
     settings: Settings = Settings()
-    converter = JiraToMarvinConverter()
 
     def __init__(self,
                  marvin_id: Optional[str],
@@ -38,20 +39,6 @@ class MarvinProject:
         self.day = day
         self.timeEstimate = estimate
         self.tags = tags
-        self.sync_status = MarvinProjectStatuses.not_defined
-
-    @classmethod
-    def from_jira_issue(self, jira_issue: JiraIssue):
-        return self.converter.marvin_project_from_jira_issue(jira_issue)
-
-    @classmethod
-    def from_object(self, obj: dict):
-        return MarvinProject(
-            marvin_id=obj['_id'],
-            title=obj['title'],
-            parentId=obj['parentId'],
-            tags=obj.get('labelIds') or []
-        )
 
     def to_json(self) -> str:
         # add tags in title because labelIds param does not seem to work in API

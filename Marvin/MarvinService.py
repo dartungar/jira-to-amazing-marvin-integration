@@ -34,6 +34,10 @@ class MarvinService:
             raise MarvinServiceError(
                 f'Error adding project into Marvin: {response.status_code}')
 
+    def create_projects_with_api(self, projects: List[MarvinProject]) -> None:
+        for project in projects:
+            self.create_project_with_API(project)
+
     def get_projects_data_from_API(self) -> List[dict]:
         response = requests.post(
             self.settings.MARVIN_GET_ALL_PROJECTS_URL, headers=self.URL_HEADERS)
