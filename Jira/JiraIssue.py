@@ -1,13 +1,14 @@
 from typing import Optional
 from dataclasses import dataclass
 
-@dataclass
+
+@dataclass(init=True)
 class JiraIssue:
     key: str
     title: str
     status: str
     assignee: str
-    estimate: int
+    estimate: Optional[int]
     link: str
     priority: str
     project: str
@@ -21,5 +22,3 @@ class JiraIssue:
         self.link: str = link,
         self.priority: str = priority,
         self.project: str = project
-
-

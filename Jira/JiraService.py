@@ -1,29 +1,15 @@
-from typing import List, Optional, Sequence, Set
+from typing import List
 from Jira.JiraIssue import JiraIssue
-from Jira.JiraIssueRepository import JiraIssueRepository
 from Settings import Settings
 import os
 import requests
 import base64
-import re
 
 
 class JiraService:
     settings: Settings
     API_KEY: str
     URL_HEADERS: dict
-
-    @staticmethod
-    def get_issues_keys_from_string(string: str) -> Set[str]:
-        '''get a set of issue keys by parsing string'''
-        key_regex = re.compile(r'[A-Z]{2,6}-[1-9][0-9]{0,4}')
-        return set(key_regex.findall(string))
-
-    @staticmethod
-    def get_single_issue_key_from_string(string: str) -> str:
-        key_regex = re.compile(r'[A-Z]{2,6}-[1-9][0-9]{0,4}')
-        keys_found = key_regex.findall(string)
-        return keys_found[0] if keys_found else None
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
@@ -46,22 +32,6 @@ class JiraService:
         except Exception as e:
             raise JiraServiceError(f"Error during Jira service setup: {e}")
 
-    def populate_issues_repository_from_API(self, repository: JiraIssueRepository, jira_issues_keys: List[str] = None) -> JiraIssueRepository:
-        '''get raw issues data & populate issues repository with issues created from raw data'''
-        raw_issues_data: List[dict]
-        try:
-            if jira_issues_keys:
-                raw_issues_data = [
-                    self.get_raw_issue_data_by_key(key) for key in jira_issues_keys]
-            else:
-                raw_issues_data = self.get_raw_all_issues_data()
-            repository.populate_from_raw_data(
-                raw_issues_data, base_issue_url=self.settings.JIRA_BROWSING_BASE_URL)
-            return repository
-        except Exception as e:
-            raise JiraServiceError(
-                f'Error populating Jira issues repository from API: {e}')
-
     def get_raw_issue_data_by_key(self, key: str) -> dict:
         '''get single issue data by its key'''
         response = requests.get(str(self.settings.JIRA_GET_TASK_URL) + key,
@@ -71,9 +41,16 @@ class JiraService:
                 f"Error getting task data from Jira: {response.status_code}")
         return response.json()
 
+    def get_issues_from_jira(self) -> List[JiraIssue]:
+        '''Fetch all available issues from Jira, with filters specified in settings.json'''
+        data = self.get_raw_all_issues_data()
+        issues = [self.jira_issue_from_raw_data(
+            d, self.settings.JIRA_BROWSING_BASE_URL) for d in data]
+        return issues
+
     # TODO: projects, status
     def get_raw_all_issues_data(self) -> List[dict]:
-        '''get all available issues from Jira, with filters specified in settings.json'''
+        '''Fetch raw data for all available issues from Jira, with filters specified in settings.json'''
         jql = self.construct_jql_query()
         response = requests.get(str(self.settings.JIRA_SEARCH_URL),
                                 params={
@@ -103,6 +80,21 @@ class JiraService:
         # tasks must be not done
         jql += ' AND statusCategory != Done'
         return jql
+
+    def jira_issue_from_raw_data(self, raw_issue_data: dict, base_issue_url: str):
+        return JiraIssue(
+            key=raw_issue_data['key'],
+            title=raw_issue_data['fields']['summary'],
+            project=raw_issue_data['fields']['project']['name'],
+            status=raw_issue_data['fields']['status']['name'],
+            priority=raw_issue_data['fields']['priority']['name'],
+            estimate=raw_issue_data['fields'].get(
+                'timetracking').get('originalEstimateSeconds') if raw_issue_data['fields'].get(
+                'timetracking') else None,
+            link=base_issue_url +
+            raw_issue_data['key'] if base_issue_url else '',
+            assignee=raw_issue_data['fields']['assignee']['emailAddress']
+        )
 
 
 class JiraServiceError(ValueError):
