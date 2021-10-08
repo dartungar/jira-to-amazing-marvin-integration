@@ -1,9 +1,7 @@
 from Marvin.MarvinTask import MarvinTask
 from Settings import Settings
 from typing import List
-from Marvin.MarvinProjectRepository import MarvinProjectsRepository
-from Marvin.MarvinProject import MarvinProject, MarvinProjectStatuses
-from Marvin.MarvinService import MarvinServiceException
+from Marvin.MarvinProject import MarvinProject
 import os
 import requests
 
@@ -65,5 +63,5 @@ class MarvinApiService:
         return response.status_code
 
 
-class MarvinApiException(MarvinServiceException):
+class MarvinApiException(Exception):
     pass

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from Application import Application
+from Application.Application import Application
 import sys
 
 if __name__ == "__main__":
@@ -11,7 +11,7 @@ if __name__ == "__main__":
             app.sync()
 
         if sys.argv[1] == '--update':
-            app.get_jira_issues_for_existing_marvin_projects()
+            app.check_assignees()
 
         else:
             app.get_jira_issues_by_string_and_add_projects_to_marvin(

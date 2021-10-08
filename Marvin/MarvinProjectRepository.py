@@ -1,5 +1,5 @@
 from Jira.JiraIssue import JiraIssue
-from Marvin.MarvinProject import MarvinProject, MarvinProjectStatuses
+from Marvin.MarvinProject import MarvinProject
 from typing import List
 from Marvin.JiraToMarvinConverter import JiraToMarvinConverter
 
@@ -53,8 +53,7 @@ class MarvinProjectsRepository:
 
     def add_multiple_from_raw_data(self, raw_data: List[dict]) -> None:
         for entry in raw_data:
-            project = MarvinProject.from_object(entry)
-            self.add(project)
+            self.add_from_object(entry)
 
     def add_multiple_from_jira_issues(self, issues: List[JiraIssue]) -> None:
         for i in issues:
@@ -69,3 +68,12 @@ class MarvinProjectsRepository:
             new_project = JiraToMarvinConverter.marvin_project_from_jira_issue(
                 issue)
             self.add(new_project)
+    
+    def add_from_object(self, obj: dict):
+        project = MarvinProject(
+            marvin_id=obj['_id'],
+            title=obj['title'],
+            parentId=obj['parentId'],
+            tags=obj.get('labelIds') or []
+        )
+        self.add(project)

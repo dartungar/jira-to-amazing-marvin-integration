@@ -6,7 +6,7 @@ from Marvin.MarvinTask import MarvinTask
 from Jira.JiraService import JiraService
 
 
-class MainService:
+class SyncService:
     settings: Settings
     project_repository: MarvinProjectsRepository
     marvin_api_service: MarvinApiService
@@ -14,6 +14,7 @@ class MainService:
 
     def __init__(self) -> None:
         self.settings = Settings()
+        self.project_repository = MarvinProjectsRepository()
         self.marvin_api_service = MarvinApiService(self.settings)
         self.jira_service = JiraService(self.settings)
 
@@ -36,7 +37,7 @@ class MainService:
         '''Fetches projects from Marvin and adds to the repository.'''
         try:
             data = self.marvin_api_service.get_projects_data_from_API()
-            self.project_repository.repository.populate_from_raw_data(data)
+            self.project_repository.populate_from_raw_data(data)
         except Exception as e:  # TODO: catch specific error
             raise MainServiceException(
                 f'Error populating Marvin projects repository from API: {e}')
