@@ -16,6 +16,5 @@ class Application:
         self.service.sync()
 
     def check_assignees(self) -> None:
-        self.service.create_remider_tasks_for_projects_with_changed_issue_assignees()
-
+        self.service.create_remider_tasks_for_projects_with_changed_assignees()
 

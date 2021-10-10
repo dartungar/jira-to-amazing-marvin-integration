@@ -27,7 +27,7 @@ class MarvinProjectsRepository:
 
     @property
     def projects_with_changed_assignees(self) -> List[MarvinProject]:
-        return [p for p in self.data if not p.current_user_is_assignee_in_jira]
+        return [p for p in self.data if p.marvin_id and p.assignee_is_changed]
 
     def populate_from_raw_data(self, raw_data: List[dict]) -> None:
         '''populate from an array of dicts'''
@@ -68,12 +68,12 @@ class MarvinProjectsRepository:
             new_project = JiraToMarvinConverter.marvin_project_from_jira_issue(
                 issue)
             self.add(new_project)
-    
+
     def add_from_object(self, obj: dict):
         project = MarvinProject(
             marvin_id=obj['_id'],
             title=obj['title'],
-            parentId=obj['parentId'],
+            parent_id=obj['parentId'],
             tags=obj.get('labelIds') or []
         )
         self.add(project)

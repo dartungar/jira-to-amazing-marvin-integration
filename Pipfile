@@ -8,6 +8,7 @@ requests = "*"
 pydantic = "*"
 pytest = "*"
 types-requests = "*"
+autopep8 = "*"
 
 [dev-packages]
 autopep8 = "*"

@@ -41,7 +41,7 @@ class JiraService:
                 f"Error getting task data from Jira: {response.status_code}")
         return response.json()
 
-    def get_issues_from_jira(self) -> List[JiraIssue]:
+    def get_issues_from_jira(self, current_user_only=False) -> List[JiraIssue]:
         '''Fetch all available issues from Jira, with filters specified in settings.json'''
         data = self.get_raw_all_issues_data()
         issues = [self.jira_issue_from_raw_data(
@@ -49,9 +49,9 @@ class JiraService:
         return issues
 
     # TODO: projects, status
-    def get_raw_all_issues_data(self) -> List[dict]:
+    def get_raw_all_issues_data(self, current_user_only=False) -> List[dict]:
         '''Fetch raw data for all available issues from Jira, with filters specified in settings.json'''
-        jql = self.construct_jql_query()
+        jql = self.construct_jql_query(current_user_only)
         response = requests.get(str(self.settings.JIRA_SEARCH_URL),
                                 params={
                                     "jql": jql if jql else None},
@@ -61,24 +61,26 @@ class JiraService:
                 f"Error getting all tasks data from Jira: {response.json()}")
         return response.json()['issues']
 
-    def construct_jql_query(self) -> str:
+    def construct_jql_query(self, current_user_only=False) -> str:
         '''construct JQL query using constraints from settings'''
         jql = ""
-        if self.settings.JIRA_USER_LOGIN:
+        conditions = ['statusCategory != Done AND assignee != EMPTY']
+        if current_user_only and self.settings.JIRA_USER_LOGIN:
             # can't pass "@" into jira unescaped
             user_login_escaped = self.settings.JIRA_USER_LOGIN.replace(
                 "@", "\\u0040")
-            jql = f'assignee = {user_login_escaped}'
+            conditions.append(f'assignee = {user_login_escaped}')
         if self.settings.JIRA_PROJECTS:
             projects_string = ",".join(
                 [f'"{p}"' for p in self.settings.JIRA_PROJECTS])
-            jql += f' AND project IN ({projects_string})'
+            conditions.append(f'project IN ({projects_string})')
         if self.settings.JIRA_EXCLUDED_PROJECTS:
             excluded_projects_string = ",".join(
                 [f'"{ep}"' for ep in self.settings.JIRA_EXCLUDED_PROJECTS])
-            jql += f' AND project NOT IN ({excluded_projects_string})'
+            conditions.append(f'project NOT IN ({excluded_projects_string})')
         # tasks must be not done
-        jql += ' AND statusCategory != Done'
+        jql = " AND ".join(conditions)
+        print(jql)
         return jql
 
     def jira_issue_from_raw_data(self, raw_issue_data: dict, base_issue_url: str):
@@ -93,7 +95,7 @@ class JiraService:
                 'timetracking') else None,
             link=base_issue_url +
             raw_issue_data['key'] if base_issue_url else '',
-            assignee=raw_issue_data['fields']['assignee']['emailAddress']
+            assignee=raw_issue_data['fields']['assignee'].get('emailAddress')
         )
 
 

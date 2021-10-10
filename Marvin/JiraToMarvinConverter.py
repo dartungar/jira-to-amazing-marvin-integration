@@ -18,7 +18,7 @@ class JiraToMarvinConverter:
             project.jira_issue = issue
             return project
         except Exception as e:
-            return JiraToMarvinTransformationException(e)
+            raise JiraToMarvinTransformationException(e)
 
     def marvin_label_from_jira_issue_status(self, jira_status) -> str:
         pass

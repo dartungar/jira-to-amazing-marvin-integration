@@ -18,13 +18,13 @@ class MarvinProject:
     day: Optional[str]
     time_estimate: Optional[int]
     tags: List[str]
-    _jira_issue: JiraIssue
+    _jira_issue: Optional[JiraIssue] = None
 
     settings: Settings = Settings()
 
     def __init__(self,
-                 marvin_id: Optional[str],
                  title: str,
+                 marvin_id: Optional[str] = None,
                  parent_id: str = None,
                  note: str = None,
                  day: str = None,
@@ -41,7 +41,7 @@ class MarvinProject:
         self.tags = tags
 
     @property
-    def jira_issue(self) -> None:
+    def jira_issue(self) -> JiraIssue:
         return self._jira_issue
 
     @jira_issue.setter
@@ -51,8 +51,12 @@ class MarvinProject:
         self._jira_issue = issue
 
     @property
-    def current_user_is_assignee_in_jira(self) -> bool:
-        return self._jira_issue.assignee == self.settings.JIRA_USER_LOGIN
+    def assignee_is_changed(self) -> bool:
+        print(f"{self.key} - {self.jira_issue.assignee if self.jira_issue else 'No assignee'}")
+        if self._jira_issue and self.marvin_id:
+            return self._jira_issue.assignee != self.settings.JIRA_USER_LOGIN
+        # if project has no associated Jira issue and no key, it does not have to have an assignee
+        return False
 
     def to_json(self) -> str:
         # add tags in title because labelIds param does not seem to work in API
@@ -68,6 +72,10 @@ class MarvinProject:
             'timeZoneOffset': self.settings.MARVIN_TIMEZONE_OFFSET_MINUTES
         }
         return json.dumps(project_data, ensure_ascii=False)
+
+
+class MarvinProjectException(Exception):
+    pass
 
 
 class ProjectKeysMismatchException(Exception):

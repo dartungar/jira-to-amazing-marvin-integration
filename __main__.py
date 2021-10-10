@@ -14,7 +14,6 @@ if __name__ == "__main__":
             app.check_assignees()
 
         else:
-            app.get_jira_issues_by_string_and_add_projects_to_marvin(
-                sys.argv[1])
+            print(sys.argv[1])
     else:
         app.sync()
