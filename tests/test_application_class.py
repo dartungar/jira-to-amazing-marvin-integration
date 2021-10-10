@@ -1,7 +1,5 @@
 from Settings import Settings
 from Marvin.MarvinProjectRepository import MarvinProjectsRepository
-from Jira.JiraIssueRepository import JiraIssueRepository
-from Marvin.MarvinService import MarvinService
 from Jira.JiraService import JiraService
 from Application import Application
 import pytest
@@ -15,8 +13,5 @@ def application_object():
 def test_application_init(application_object):
     assert isinstance(application_object.settings, Settings)
     assert isinstance(application_object.jira, JiraService)
-    assert isinstance(application_object.marvin, MarvinService)
-    assert isinstance(application_object.issues_repository,
-                      JiraIssueRepository)
     assert isinstance(
         application_object.projects_repository, MarvinProjectsRepository)
