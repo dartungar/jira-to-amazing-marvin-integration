@@ -51,6 +51,10 @@ class MarvinProject:
         self._jira_issue = issue
 
     @property
+    def needs_syncing(self) -> bool:
+        return self.jira_issue and self.jira_issue.assignee == self.settings.JIRA_USER_LOGIN and not self.marvin_id
+
+    @property
     def assignee_is_changed(self) -> bool:
         print(f"{self.key} - {self.jira_issue.assignee if self.jira_issue else 'No assignee'}")
         if self._jira_issue and self.marvin_id:

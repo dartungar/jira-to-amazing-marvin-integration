@@ -9,6 +9,7 @@ pydantic = "*"
 pytest = "*"
 types-requests = "*"
 autopep8 = "*"
+aiohttp = "*"
 
 [dev-packages]
 autopep8 = "*"

@@ -2,9 +2,10 @@ from Marvin.MarvinTask import MarvinTask
 from Settings import Settings
 from typing import List
 from Marvin.MarvinProject import MarvinProject
+from Utils.async_requests import async_post
 import os
 import requests
-
+from Utils.logger import logger
 
 class MarvinApiService:
     settings: Settings
@@ -25,34 +26,26 @@ class MarvinApiService:
         except Exception as e:
             raise MarvinApiException(f"Error during Marvin service setup: {e}")
 
-    def create_project_with_API(self, project: MarvinProject) -> None:
+    async def create_project_with_api(self, project: MarvinProject) -> None:
         data = project.to_json()
-        response = requests.post(
-            self.settings.MARVIN_ADD_PROJECT_URL, headers=self.URL_HEADERS, data=data.encode('utf-8'))
-        if not response.ok:
-            raise MarvinApiException(
-                f'Error adding project into Marvin: {response.status_code}')
+        logger.info(f"creating project {project.title} in Marvin...")
+        await async_post(self.settings.MARVIN_ADD_PROJECT_URL, headers=self.URL_HEADERS, data=data.encode('utf-8'))
 
-    def create_projects_with_api(self, projects: List[MarvinProject]) -> None:
+    async def create_projects_with_api(self, projects: List[MarvinProject]) -> None:
         for project in projects:
-            self.create_project_with_API(project)
+            await self.create_project_with_api(project)
 
-    def get_projects_data_from_API(self) -> List[dict]:
-        response = requests.post(
+    async def get_projects_data_from_API(self) -> List[dict]:
+        data: List[dict] = await async_post(
             self.settings.MARVIN_GET_ALL_PROJECTS_URL, headers=self.URL_HEADERS)
-        if not response.ok:
-            raise MarvinApiException(
-                f'Error getting projects data from Marvin: {response.status_code}')
+        
+        return data
 
-        return response.json()
-
-    def create_task_with_api(self, task: MarvinTask) -> None:
-        data = task.to_json()
-        response = requests.post(self.settings.MARVIN_ADD_TASK_URL,
-                                 headers=self.URL_HEADERS, data=data.encode('utf-8'))
-        if not response.ok:
-            raise MarvinApiException(
-                f'Error adding task into Marvin: {response.status_code}')
+    async def create_task_with_api(self, task: MarvinTask) -> None:
+        task_data = task.to_json()
+        logger.info(f"creating task in marvin...")
+        await async_post(self.settings.MARVIN_ADD_TASK_URL,
+                                 headers=self.URL_HEADERS, data=task_data.encode('utf-8'))
 
     def ping_for_status_code(self) -> int:
         response = requests.post(self.settings.MARVIN_PING_URL,

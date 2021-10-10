@@ -15,7 +15,7 @@ class MarvinProjectsRepository:
 
     @property
     def not_synced_projects(self) -> List[MarvinProject]:
-        return [p for p in self.data if p.jira_issue and not p.marvin_id]
+        return [p for p in self.data if p.needs_syncing]
 
     @property
     def synced_projects(self) -> List[MarvinProject]:
