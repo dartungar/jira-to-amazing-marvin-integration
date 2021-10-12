@@ -5,6 +5,8 @@ from Marvin.MarvinProject import MarvinProject
 from Marvin.MarvinTask import MarvinTask
 from Jira.JiraService import JiraService
 from Utils.logger import logger
+import asyncio
+
 
 class SyncService:
     settings: Settings
@@ -24,31 +26,35 @@ class SyncService:
         projects_to_create = self.project_repository.not_synced_projects
         if projects_to_create:
             await self.marvin_api_service.create_projects_with_api(projects_to_create)
-            logger.info(f"done syncing; created {len(projects_to_create)} projects in Marvin")
+            logger.info(
+                f"done syncing; created {len(projects_to_create)} projects in Marvin")
             return
         logger.info("done syncing; already up to date.")
 
     async def create_remider_tasks_for_projects_with_changed_assignees(self) -> None:
-        logger.info("starting creating reminder tasks for projects with changed assignees...")
+        logger.info(
+            "starting creating reminder tasks for projects with changed assignees...")
         await self.populate_project_repository()
         projects_to_create_tasks_for = self.project_repository.projects_with_changed_assignees
         if projects_to_create_tasks_for:
-            for project in projects_to_create_tasks_for:
-                await self.create_task_in_marvin_for_project(project)
-            logger.info(f"created reminder tasks for {len(projects_to_create_tasks_for)} projects.")
+            await asyncio.gather(*[self.create_task_in_marvin_for_project(
+                p) for p in projects_to_create_tasks_for])
+            logger.info(
+                f"created reminder tasks for {len(projects_to_create_tasks_for)} projects.")
             return
         logger.info("found no projects with changed assignees.")
 
     async def populate_project_repository(self) -> None:
         logger.info("populating project repository from Marvin & Jira...")
         self.project_repository.clear()
-        await self.get_and_add_projects_from_marvin()
-        await self.get_and_add_issues_from_jira()
+        await asyncio.gather(self.get_and_add_projects_from_marvin(),
+                             self.get_and_add_issues_from_jira())
         logger.info("done populating project repository.")
 
     async def get_and_add_projects_from_marvin(self) -> None:
         '''Fetches projects from Marvin and adds to the repository.'''
-        logger.info("fetching projects from Marvin and adding to the repository...")
+        logger.info(
+            "fetching projects from Marvin and adding to the repository...")
         try:
             data = await self.marvin_api_service.get_projects_data_from_API()
             self.project_repository.populate_from_raw_data(data)
