@@ -12,6 +12,7 @@ class JiraToMarvinConverter:
         try:
             project = MarvinProject(
                 title=issue.key+' '+issue.title,
+                key=issue.key,
                 note=issue.link[0],  # why do we have tuple here?
                 estimate=issue.estimate or None,
             )

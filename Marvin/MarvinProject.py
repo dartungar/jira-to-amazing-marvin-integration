@@ -24,6 +24,7 @@ class MarvinProject:
 
     def __init__(self,
                  title: str,
+                 key: str,
                  marvin_id: Optional[str] = None,
                  parent_id: str = None,
                  note: str = None,
@@ -33,7 +34,7 @@ class MarvinProject:
 
         self.title = title
         self.marvin_id = marvin_id
-        self.key = get_single_issue_key_from_string(title)
+        self.key = key
         self.parent_id = parent_id
         self.note = note
         self.day = day

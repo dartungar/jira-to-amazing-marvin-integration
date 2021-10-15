@@ -1,4 +1,5 @@
 from Marvin.MarvinProjectRepository import MarvinProjectsRepository
+from Marvin.MarvinProjectService import MarvinProjectService
 from Settings import Settings
 from Marvin.MarvinApiService import MarvinApiService
 from Marvin.MarvinProject import MarvinProject
@@ -10,20 +11,20 @@ import asyncio
 
 class SyncService:
     settings: Settings
-    project_repository: MarvinProjectsRepository
+    project_service: MarvinProjectService
     marvin_api_service: MarvinApiService
     jira_service: JiraService
 
     def __init__(self) -> None:
         self.settings = Settings()
-        self.project_repository = MarvinProjectsRepository()
+        self.project_service = MarvinProjectService()
         self.marvin_api_service = MarvinApiService(self.settings)
         self.jira_service = JiraService(self.settings)
 
     async def sync(self) -> None:
         logger.info("starting sync...")
         await self.populate_project_repository()
-        projects_to_create = self.project_repository.not_synced_projects
+        projects_to_create = self.project_service.not_synced_projects
         if projects_to_create:
             await self.marvin_api_service.create_projects_with_api(projects_to_create)
             logger.info(
@@ -35,7 +36,7 @@ class SyncService:
         logger.info(
             "starting creating reminder tasks for projects with changed assignees...")
         await self.populate_project_repository()
-        projects_to_create_tasks_for = self.project_repository.projects_with_changed_assignees
+        projects_to_create_tasks_for = self.project_service.projects_with_changed_assignees
         if projects_to_create_tasks_for:
             await asyncio.gather(*[self.create_task_in_marvin_for_project(
                 p) for p in projects_to_create_tasks_for])
@@ -46,7 +47,7 @@ class SyncService:
 
     async def populate_project_repository(self) -> None:
         logger.info("populating project repository from Marvin & Jira...")
-        self.project_repository.clear()
+        self.project_service.clear()
         await asyncio.gather(self.get_and_add_projects_from_marvin(),
                              self.get_and_add_issues_from_jira())
         logger.info("done populating project repository.")
@@ -57,7 +58,7 @@ class SyncService:
             "fetching projects from Marvin and adding to the repository...")
         try:
             data = await self.marvin_api_service.get_projects_data_from_API()
-            self.project_repository.populate_from_raw_data(data)
+            self.project_service.populate_from_raw_data(data)
             logger.info(f"fetched {len(data)} projects from Marvin.")
         except Exception as e:  # TODO: catch specific error
             raise MainServiceException(
@@ -68,7 +69,7 @@ class SyncService:
         logger.info("fetching issues from Jira and adding to the repository...")
         try:
             issues = await self.jira_service.get_issues_from_jira(current_user_only)
-            self.project_repository.add_multiple_from_jira_issues(issues)
+            self.project_service.add_multiple_from_jira_issues(issues)
             logger.info(f"fetched {len(issues)} issues from Jira.")
         except Exception as e:
             raise MainServiceException(e)
