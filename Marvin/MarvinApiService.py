@@ -2,9 +2,8 @@ from Marvin.MarvinTask import MarvinTask
 from Settings import Settings
 from typing import List
 from Marvin.MarvinProject import MarvinProject
-from Utils.async_requests import async_post
+from Utils.async_requests import async_post, async_ping
 import os
-import requests
 from Utils.logger import logger
 
 class MarvinApiService:
@@ -47,13 +46,10 @@ class MarvinApiService:
         await async_post(self.settings.MARVIN_ADD_TASK_URL,
                                  headers=self.URL_HEADERS, data=task_data.encode('utf-8'))
 
-    def ping_for_status_code(self) -> int:
-        response = requests.post(self.settings.MARVIN_PING_URL,
+    async def ping_for_status_code(self) -> int:
+        response_code = await async_ping('POST', self.settings.MARVIN_PING_URL, 
                                  headers=self.URL_HEADERS)
-        if not response.ok:
-            raise MarvinApiException(
-                f'Error pinging Marvin API: {response.status_code}')
-        return response.status_code
+        return response_code
 
 
 class MarvinApiException(Exception):

@@ -17,6 +17,11 @@ async def async_post(url: str, headers: dict = None, data: str = None) -> dict:
                 raise HttpRequestException(f"Error while making POST request to {url}: {response.status}")
             return resp_data
 
+async def async_ping(method: str, url: str, headers: dict = None, data: str = None) -> int:
+    async with aiohttp.ClientSession() as session:
+        async with session.request(method, url,  headers=headers, data=data) as response:
+            return response.status
+
 
 
 class HttpRequestException(Exception):

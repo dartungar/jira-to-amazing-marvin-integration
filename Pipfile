@@ -4,10 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-requests = "*"
 pydantic = "*"
 pytest = "*"
-types-requests = "*"
 autopep8 = "*"
 aiohttp = "*"
 
