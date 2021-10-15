@@ -13,7 +13,7 @@ if __name__ == "__main__":
             asyncio.run(app.sync())
 
         if sys.argv[1] == '--update':
-            asyncio.run(app.check_assignees())
+            asyncio.run(app.update_projects())
 
         else:
             print(sys.argv[1])

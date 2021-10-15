@@ -92,7 +92,8 @@ class JiraService:
                 'timetracking') else None,
             link=base_issue_url +
             raw_issue_data['key'] if base_issue_url else '',
-            assignee=raw_issue_data['fields']['assignee'].get('emailAddress')
+            assignee=raw_issue_data['fields']['assignee'].get('emailAddress'),
+            has_subtasks=True if raw_issue_data['fields'].get('subtasks') else False
         )
 
 

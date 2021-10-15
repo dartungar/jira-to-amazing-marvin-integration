@@ -57,11 +57,14 @@ class MarvinProject:
 
     @property
     def assignee_is_changed(self) -> bool:
-        print(f"{self.key} - {self.jira_issue.assignee if self.jira_issue else 'No assignee'}")
         if self._jira_issue and self.marvin_id:
             return self._jira_issue.assignee != self.settings.JIRA_USER_LOGIN
         # if project has no associated Jira issue and no key, it does not have to have an assignee
         return False
+
+    @property
+    def has_subtasks(self) -> bool:
+        return self.jira_issue and self.jira_issue.has_subtasks
 
     def to_json(self) -> str:
         # add tags in title because labelIds param does not seem to work in API

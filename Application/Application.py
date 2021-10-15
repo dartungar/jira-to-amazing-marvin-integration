@@ -12,6 +12,6 @@ class Application:
     async def sync(self) -> None:
         await self.service.sync()
 
-    async def check_assignees(self) -> None:
-        await self.service.create_remider_tasks_for_projects_with_changed_assignees()
+    async def update_projects(self) -> None:
+        await self.service.create_remider_tasks_for_projects()
 

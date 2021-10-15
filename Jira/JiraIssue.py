@@ -12,13 +12,15 @@ class JiraIssue:
     link: str
     priority: str
     project: str
+    has_subtasks: bool
 
-    def __init__(self, key: str, title: str, status: str, assignee: str, estimate: int, priority: str, project: str, link: str) -> None:
-        self.key: str = key
-        self.title: str = title
-        self.status: str = status
-        self.assignee: str = assignee
-        self.estimate: int = estimate * 1000 if estimate else None
-        self.link: str = link,
-        self.priority: str = priority,
-        self.project: str = project
+    def __init__(self, key: str, title: str, status: str, assignee: str, estimate: int, priority: str, project: str, link: str, has_subtasks: bool) -> None:
+        self.key = key
+        self.title = title
+        self.status = status
+        self.assignee = assignee
+        self.estimate = estimate * 1000 if estimate else None
+        self.link = link,
+        self.priority = priority,
+        self.project = project,
+        self.has_subtasks = has_subtasks

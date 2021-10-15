@@ -22,6 +22,7 @@ class SyncService:
         self.jira_service = JiraService(self.settings)
 
     async def sync(self) -> None:
+        '''sync Marvin projects with Jira issues, creating Marvin projects if needed'''
         logger.info("starting sync...")
         await self.populate_project_repository()
         projects_to_create = self.project_service.not_synced_projects
@@ -32,18 +33,19 @@ class SyncService:
             return
         logger.info("done syncing; already up to date.")
 
-    async def create_remider_tasks_for_projects_with_changed_assignees(self) -> None:
+    async def create_remider_tasks_for_projects(self) -> None:
+        '''create "reminder" tasks for projects with subtasks or changed assignees'''
         logger.info(
-            "starting creating reminder tasks for projects with changed assignees...")
+            "starting creating reminder tasks for projects...")
         await self.populate_project_repository()
-        projects_to_create_tasks_for = self.project_service.projects_with_changed_assignees
+        projects_to_create_tasks_for = self.project_service.projects_with_changed_assignees + self.project_service.projects_with_subtasks
         if projects_to_create_tasks_for:
-            await asyncio.gather(*[self.create_task_in_marvin_for_project(
+            await asyncio.gather(*[self.create_checkup_task_in_marvin_for_project(
                 p) for p in projects_to_create_tasks_for])
             logger.info(
                 f"created reminder tasks for {len(projects_to_create_tasks_for)} projects.")
             return
-        logger.info("found no projects with changed assignees.")
+        logger.info("found no projects that might need attention.")
 
     async def populate_project_repository(self) -> None:
         logger.info("populating project repository from Marvin & Jira...")
@@ -74,10 +76,10 @@ class SyncService:
         except Exception as e:
             raise MainServiceException(e)
 
-    async def create_task_in_marvin_for_project(self, project: MarvinProject) -> None:
+    async def create_checkup_task_in_marvin_for_project(self, project: MarvinProject) -> None:
         logger.info("creating task in Marvin...")
         task = MarvinTask(project.marvin_id,
-                          "Контроль по задаче в Jira", self.settings)
+                          f"Контроль по задаче в Jira (сменился исполнитель или добавились подзадачи) - {project.jira_issue.link}", self.settings)
         await self.marvin_api_service.create_task_with_api(task)
 
 

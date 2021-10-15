@@ -73,4 +73,8 @@ class MarvinProjectService:
     def projects_with_changed_assignees(self) -> List[MarvinProject]:
         return [p for p in self.projects.data if p.marvin_id and p.assignee_is_changed]
 
+    @property
+    def projects_with_subtasks(self) -> List[MarvinProject]:
+        return [p for p in self.projects.data if p.has_subtasks]
+
 
