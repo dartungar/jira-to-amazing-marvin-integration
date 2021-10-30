@@ -4,8 +4,9 @@
         "SEARCH_URL": "https://treolan.atlassian.net/rest/api/3/search",
         "BROWSING_BASE_URL": "https://treolan.atlassian.net/browse/",
         "USER_LOGIN": "d.nikolayev@treolan.ru",
+        "STATUS_CATEGORIES_ACTIVE": ["New", "In Progress"],
         "PROJECTS": [],
-        "EXCLUDED_PROJECTS": ["Бизнес задачи","LE2 Staff development","ServiceDesk","Retrospective", "Axapta","ANALYTICS TASKS","CRM","NFS","Opus & HR-система","TestDesk", "Кубы и отчеты","Идеи","Сотрудники"]
+        "EXCLUDED_PROJECTS": ["Бизнес задачи","LE2 Staff development","ServiceDesk","Retrospective", "Axapta","ANALYTICS TASKS","CRM","NFS","TestDesk", "Кубы и отчеты","Идеи","Сотрудники"]
     },
     "Marvin": {
         "ADD_PROJECT_URL": "https://serv.amazingmarvin.com/api/addProject",

@@ -1,11 +1,9 @@
 from typing import List
 from Jira.JiraIssue import JiraIssue
+from Jira.Jql.JqlBuilderBase import JqlBuilderBase
 from Settings import Settings
 import os
-import requests
 import base64
-import asyncio
-import aiohttp
 
 from Utils.async_requests import async_get
 
@@ -32,7 +30,7 @@ class JiraService:
                 self.URL_HEADERS["Authorization"] = (b"Basic " + credentials).decode("utf-8")
             else:
                 raise Exception(
-                    "JIRA_EMAIL and/or API_KEY system variables not found")
+                    "JIRA_USER_LOGIN and/or API_KEY system variables not found")
         except Exception as e:
             raise JiraServiceError(f"Error during Jira service setup: {e}")
 
@@ -50,35 +48,28 @@ class JiraService:
         return issues
 
     # TODO: projects, status
-    async def get_raw_all_issues_data(self, current_user_only=False) -> List[dict]:
+    async def get_raw_all_issues_data(self, current_user_only=False, get_done=False) -> List[dict]:
         '''Fetch raw data for all available issues from Jira, with filters specified in settings.json'''
-        jql = self.construct_jql_query(current_user_only)
+        jql = self.construct_jql_query(current_user_only, get_done)
         data = await async_get(str(self.settings.JIRA_SEARCH_URL),
                                 params={
                                     "jql": jql if jql else None},
                                 headers=self.URL_HEADERS)
         return data['issues']
 
-    def construct_jql_query(self, current_user_only=False) -> str:
+    def construct_jql_query(self, current_user_only=False, get_done=False) -> str:
         '''construct JQL query using constraints from settings'''
-        jql = ""
-        conditions = ['statusCategory != Done AND assignee != EMPTY']
+        jql = JqlBuilderBase()
+        jql.with_assignee_not_empty()
+        if not get_done and self.settings.JIRA_STATUS_CATEGORIES_ACTIVE:
+            jql.with_status_categories(self.settings.JIRA_STATUS_CATEGORIES_ACTIVE)
         if current_user_only and self.settings.JIRA_USER_LOGIN:
-            # can't pass "@" into jira unescaped
-            user_login_escaped = self.settings.JIRA_USER_LOGIN.replace(
-                "@", "\\u0040")
-            conditions.append(f'assignee = {user_login_escaped}')
+            jql.with_assignees([self.settings.JIRA_USER_LOGIN])
         if self.settings.JIRA_PROJECTS:
-            projects_string = ",".join(
-                [f'"{p}"' for p in self.settings.JIRA_PROJECTS])
-            conditions.append(f'project IN ({projects_string})')
+            jql.with_projects(self.settings.JIRA_PROJECTS)
         if self.settings.JIRA_EXCLUDED_PROJECTS:
-            excluded_projects_string = ",".join(
-                [f'"{ep}"' for ep in self.settings.JIRA_EXCLUDED_PROJECTS])
-            conditions.append(f'project NOT IN ({excluded_projects_string})')
-        # tasks must be not done
-        jql = " AND ".join(conditions)
-        return jql
+            jql.exclude_projects(self.settings.JIRA_EXCLUDED_PROJECTS)
+        return str(jql)
 
     def jira_issue_from_raw_data(self, raw_issue_data: dict, base_issue_url: str):
         return JiraIssue(

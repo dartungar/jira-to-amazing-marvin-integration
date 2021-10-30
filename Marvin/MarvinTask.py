@@ -13,7 +13,7 @@ class MarvinTask:
     review_date: str
     settings: Settings
 
-    def __init__(self, parent_id: str, title: str, settings: Settings,  day: str, review_date: str, tags: List[str] = []) -> None:
+    def __init__(self, parent_id: str, title: str, settings: Settings,  day: str = "", review_date: str = "", tags: List[str] = []) -> None:
         self.parent_id = parent_id
         self.title = title
         self.tags = tags

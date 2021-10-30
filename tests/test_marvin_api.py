@@ -15,6 +15,10 @@ def raw_projects_data(marvin_service: MarvinApiService):
     data = asyncio.run(marvin_service.get_projects_data_from_API())
     return data
 
+# TODO: test that incoming raw data has all needed fields
+
+# TODO: test creating task in marvin
+# TODO: test creating project in marvin
 
 def test_setup(marvin_service: MarvinApiService):
     assert marvin_service.URL_HEADERS
